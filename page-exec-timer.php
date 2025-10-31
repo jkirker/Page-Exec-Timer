@@ -1,17 +1,22 @@
 <?php
 /**
  * Plugin Name: Page Exec Timer
- * Description: Reports total PHP execution time, DB queries, peak memory, and CPU load (with disguised MB) at the end of HTML responses, total DOM count.
+ * Description: Reports total PHP execution time, DB queries, peak memory, and CPU load (with disguised MB) at the end of HTML responses.
  * Author: John Kirker
+ * v1.1
  */
 
 if (!defined('ABSPATH')) { exit; }
 
 function pet_is_html_frontend_request(): bool {
-    // Keep excluding AJAX and REST
+    // Ignore AJAX, REST, and robots.txt
     if (function_exists('wp_doing_ajax') && wp_doing_ajax()) return false;
     if (function_exists('wp_is_json_request') && wp_is_json_request()) return false;
     if (defined('REST_REQUEST') && REST_REQUEST) return false;
+
+    // Don't run for robots.txt
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    if (stripos($uri, 'robots.txt') !== false) return false;
 
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     return in_array($method, ['GET','HEAD'], true);
